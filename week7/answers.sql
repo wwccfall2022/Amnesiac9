@@ -72,7 +72,7 @@ CREATE TABLE players (
         FOREIGN KEY (item_id)
         REFERENCES items (item_id)
         ON UPDATE CASCADE
-        ON DELETE CASCADE,
+        ON DELETE CASCADE
  );
  
     CREATE TABLE equipped (
@@ -84,7 +84,7 @@ CREATE TABLE players (
         FOREIGN KEY (item_id)
         REFERENCES items (item_id)
         ON UPDATE CASCADE
-        ON DELETE CASCADE,
+        ON DELETE CASCADE
  );
 
 
