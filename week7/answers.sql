@@ -80,7 +80,7 @@ CREATE TABLE players (
  );
  
     CREATE TABLE equipped (
-    equiped_id INT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    equipped_id INT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
     character_id INT UNSIGNED NOT NULL,
     item_id INT UNSIGNED NOT NULL,
         FOREIGN KEY (character_id)
