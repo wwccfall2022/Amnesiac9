@@ -53,7 +53,7 @@ CREATE TABLE players (
         FOREIGN KEY (team_id)
         REFERENCES teams (team_id)
         ON UPDATE CASCADE
-        ON DELETE CASCADE,
+        ON DELETE CASCADE
 );
 
    CREATE TABLE items (
