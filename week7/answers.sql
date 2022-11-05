@@ -134,12 +134,13 @@ CREATE OR REPLACE VIEW character_items AS
         FROM character_equipped ce
 		UNION
 	SELECT
-        ci.character_id AS character_id,
+        		ci.character_id AS character_id,
 			ci.character_name AS character_name,
 			ci.item_name AS item_name,
 			ci.armor AS armor,
 			ci.damage AS damage
-        FROM character_inv ci;
+        FROM character_inv ci
+	ORDER BY item_name;;
         
  
 
