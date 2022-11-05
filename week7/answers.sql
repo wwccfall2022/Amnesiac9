@@ -181,7 +181,7 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
         DECLARE stat_armor TINYINT UNSIGNED;
         DECLARE item_armor TINYINT UNSIGNED;
         
-        SELECT i.armor
+       		SELECT SUM(i.armor)
 			INTO item_armor 
 				FROM characters c
 				INNER JOIN equipped eq
@@ -189,32 +189,21 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
 				INNER JOIN items i
 					ON i.item_id = eq.item_id
 			WHERE c.character_id=character_id
-			GROUP BY c.character_id, i.armor;
+			GROUP BY c.character_id;
+		
+		SELECT cs.armor 
+			INTO stat_armor 
+				FROM characters c 
+				INNER JOIN character_stats cs 
+					ON c.character_id = cs.character_id 
+			WHERE c.character_id=character_id 
+			GROUP BY c.character_id;
+        
 		
 		IF item_armor > 0 THEN
-			SELECT i.armor + cs.armor
-			INTO total_armor 
-				FROM characters c
-				INNER JOIN equipped eq
-					ON c.character_id = eq.character_id
-				INNER JOIN items i
-					ON i.item_id = eq.item_id
-				INNER JOIN character_stats cs
-					ON c.character_id = cs.character_id
-			WHERE c.character_id=character_id
-			GROUP BY c.character_id, i.armor, cs.armor;
-				
+			SET total_armor = (item_armor + stat_armor);
 			RETURN total_armor;
 		ELSE 
-			
-			SELECT cs.armor 
-				INTO stat_armor 
-					FROM characters c 
-					INNER JOIN character_stats cs 
-						ON c.character_id = cs.character_id 
-				WHERE c.character_id=character_id 
-				GROUP BY c.character_id, cs.armor;
-        
 			RETURN stat_armor;
 		END IF;
         
