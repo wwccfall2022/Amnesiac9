@@ -140,7 +140,7 @@ CREATE OR REPLACE VIEW character_items AS
 			ci.armor AS armor,
 			ci.damage AS damage
         FROM character_inv ci
-	ORDER BY item_name;;
+	ORDER BY item_name;
         
  
 
