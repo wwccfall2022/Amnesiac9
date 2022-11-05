@@ -93,7 +93,8 @@ CREATE TABLE players (
         ON DELETE CASCADE
  );
  
--- Check all characters items in inventory and equiped.
+
+-- ------------------ CHARACTER INVENTORY CHECK ------------------
 CREATE OR REPLACE VIEW character_equipped AS 
 	SELECT 
 			c.character_id AS character_id,
@@ -148,7 +149,7 @@ CREATE OR REPLACE VIEW character_items AS
 -- SELECT * FROM character_equipped;
 
 
--- check teams items, doesn't duplicate items on the same team currently
+-- ----------------- TEAM INVENTORY CHECK ------------------
 CREATE OR REPLACE VIEW team_items AS 
 	SELECT 
 		t.team_id AS team_id,
@@ -169,7 +170,7 @@ GROUP BY t.team_id, inv.item_id;
 
 -- SELECT * FROM team_items;
 
-
+-- ------------------------- ARMOR TOTAL FUNCTION ----------------------------
 DELIMITER ;;
 CREATE FUNCTION armor_total(character_id INT UNSIGNED)
     RETURNS INT UNSIGNED
@@ -198,36 +199,35 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
 			WHERE c.character_id=character_id 
 			GROUP BY c.character_id;
         
-		
+        
 		IF item_armor > 0 THEN
 			SET total_armor = (item_armor + stat_armor);
 			RETURN total_armor;
 		ELSE 
 			RETURN stat_armor;
 		END IF;
-        
-
-        
 END;;
 DELIMITER ;
     
      -- SET @character_id=7;
 	--  SELECT armor_total(@character_id) AS armor_total, name AS name FROM characters WHERE character_id=@character_id;
    
--- attack
+-- ------------------------------- Attack Procedure -------------------------
 DELIMITER ;;
-CREATE PROCEDURE attack(target INT UNSIGNED, attacker INT UNSIGNED)
+CREATE PROCEDURE attack(target INT UNSIGNED, chosen_weapon INT UNSIGNED)
 BEGIN
 	
     DECLARE outcome VARCHAR(32);
     DECLARE char_armor TINYINT UNSIGNED;
     DECLARE wep_damage TINYINT UNSIGNED;
-    -- DECLARE weapon TINYINT UNSIGNED;
+	DECLARE weapon TINYINT UNSIGNED;
     DECLARE netdmg TINYINT SIGNED;
     DECLARE char_health TINYINT SIGNED;
     
     SELECT armor_total(target) INTO char_armor;
-    SELECT MAX(damage) INTO wep_damage FROM character_equipped WHERE character_id=attacker AND damage > 0;
+    SELECT item_id INTO weapon FROM equipped WHERE equipped_id = chosen_weapon;
+    SELECT damage INTO wep_damage FROM items WHERE item_id = weapon;
+    -- SELECT MAX(damage) INTO wep_damage FROM character_equipped WHERE character_id=attacker AND damage > 0; -- THIS GETS ITEM FROM PLAYER, i just need item from equiped 
     -- SELECT item_id INTO weapon FROM character_equipped WHERE character_id=attacker AND damage >; -- doesn't work when there are multiple weapons equipped.
     -- SELECT damage INTO wep_damage FROM character_equipped WHERE item_id=weapon GROUP BY item_id;
 
@@ -253,12 +253,12 @@ BEGIN
 END;;
 DELIMITER ;
 
--- CALL attack(10, 1);
+-- CALL attack(10, 68);
 -- SELECT MAX(damage) FROM character_equipped WHERE character_id=1 AND damage > 0;
 -- SELECT health FROM character_stats WHERE character_id=10;
 -- SELECT damage FROM character_equipped WHERE item_id=7 GROUP BY item_id;
 
--- equip
+-- ------------------- Equip -----------------------
 DELIMITER ;;
 CREATE PROCEDURE equip(equip_id INT UNSIGNED)
 BEGIN
@@ -281,7 +281,7 @@ DELIMITER ;
 -- CALL equip(3);
 
 
--- unequip 
+-- ------------------ Unequip ----------------------------
 DELIMITER ;;
 CREATE PROCEDURE unequip(unequip_id INT UNSIGNED)
 BEGIN
@@ -303,7 +303,7 @@ DELIMITER ;
 
 -- CALL unequip(3);
 
--- set winners
+-- -------------------------- set winners -----------------------
 DELIMITER ;;
 CREATE PROCEDURE set_winners(team INT UNSIGNED)
 BEGIN
