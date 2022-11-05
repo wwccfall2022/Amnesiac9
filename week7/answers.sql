@@ -52,8 +52,8 @@ CREATE TABLE players (
         REFERENCES teams (team_id)
 		ON UPDATE CASCADE
         ON DELETE CASCADE,
-        FOREIGN KEY (team_id)
-        REFERENCES teams (team_id)
+        FOREIGN KEY (character_id)
+        REFERENCES characters (character_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE
 );
