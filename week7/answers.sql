@@ -189,7 +189,7 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
 				INNER JOIN items i
 					ON i.item_id = eq.item_id
 			WHERE c.character_id=character_id
-			GROUP BY c.character_id;
+			GROUP BY c.character_id, i.armor;
 		
 		IF item_armor > 0 THEN
 			SELECT i.armor + cs.armor
@@ -202,7 +202,7 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
 				INNER JOIN character_stats cs
 					ON c.character_id = cs.character_id
 			WHERE c.character_id=character_id
-			GROUP BY c.character_id;
+			GROUP BY c.character_id, i.armor, cs.armor;
 				
 			RETURN total_armor;
 		ELSE 
@@ -213,13 +213,13 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
 					INNER JOIN character_stats cs 
 						ON c.character_id = cs.character_id 
 				WHERE c.character_id=character_id 
-				GROUP BY c.character_id;
+				GROUP BY c.character_id, cs.armor;
         
 			RETURN stat_armor;
 		END IF;
         
-	END;;
-    DELIMITER ;
+END;;
+DELIMITER ;
     
     --  SET @character_id=11;
 	--  SELECT armor_total(@character_id) AS armor_total, name AS name FROM characters WHERE character_id=@character_id;
