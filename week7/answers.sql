@@ -92,13 +92,14 @@ CREATE TABLE players (
         ON UPDATE CASCADE
         ON DELETE CASCADE
  );
-
+ 
 -- Check all characters items in inventory and equiped.
 CREATE OR REPLACE VIEW character_equipped AS 
 	SELECT 
 			c.character_id AS character_id,
 			c.name AS character_name,
 			i.name AS item_name,
+            i.item_id AS item_id, -- ADDED THIS
 			i.armor AS armor,
 			i.damage AS damage
         FROM characters c
@@ -134,7 +135,7 @@ CREATE OR REPLACE VIEW character_items AS
         FROM character_equipped ce
 		UNION
 	SELECT
-        		ci.character_id AS character_id,
+			ci.character_id AS character_id,
 			ci.character_name AS character_name,
 			ci.item_name AS item_name,
 			ci.armor AS armor,
@@ -142,9 +143,7 @@ CREATE OR REPLACE VIEW character_items AS
         FROM character_inv ci
 	ORDER BY item_name;
         
- 
-
--- SELECT * FROM character_items; -- WHERE character_id='10';
+-- SELECT * FROM character_items WHERE character_id='7';
 -- SELECT * FROM character_inv;
 -- SELECT * FROM character_equipped;
 
@@ -177,11 +176,11 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
     DETERMINISTIC
     BEGIN
 		
-        DECLARE total_armor TINYINT UNSIGNED;
-        DECLARE stat_armor TINYINT UNSIGNED;
-        DECLARE item_armor TINYINT UNSIGNED;
+        DECLARE total_armor INT UNSIGNED;
+        DECLARE stat_armor INT UNSIGNED;
+        DECLARE item_armor INT UNSIGNED;
         
-       		SELECT SUM(i.armor)
+		SELECT SUM(i.armor)
 			INTO item_armor 
 				FROM characters c
 				INNER JOIN equipped eq
@@ -207,38 +206,42 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
 			RETURN stat_armor;
 		END IF;
         
+
+        
 END;;
 DELIMITER ;
     
-    --  SET @character_id=11;
+     -- SET @character_id=7;
 	--  SELECT armor_total(@character_id) AS armor_total, name AS name FROM characters WHERE character_id=@character_id;
    
 -- attack
 DELIMITER ;;
-CREATE PROCEDURE attack(target INT UNSIGNED, weapon INT UNSIGNED)
+CREATE PROCEDURE attack(target INT UNSIGNED, attacker INT UNSIGNED)
 BEGIN
 	
     DECLARE outcome VARCHAR(32);
     DECLARE char_armor TINYINT UNSIGNED;
     DECLARE wep_damage TINYINT UNSIGNED;
+    DECLARE weapon TINYINT UNSIGNED;
     DECLARE netdmg TINYINT SIGNED;
     DECLARE char_health TINYINT SIGNED;
     
     SELECT armor_total(target) INTO char_armor;
-    SELECT damage INTO wep_damage FROM items WHERE item_id=weapon;
+    SELECT item_id INTO weapon FROM character_equipped WHERE character_id=attacker AND damage > 0;
+    SELECT damage INTO wep_damage FROM character_equipped WHERE item_id=weapon GROUP BY item_id;
 
      IF wep_damage <= char_armor THEN
-		-- SELECT 'Damage Blocked!' AS outcome;
-        SELECT 'Damage Blocked!' INTO outcome;
+		SELECT 'Damage Blocked!' AS outcome;
+        -- SELECT 'Damage Blocked!' INTO outcome;
 	ELSE
 		SELECT health INTO char_health FROM character_stats WHERE character_id=target;
 		SELECT wep_damage - char_armor INTO netdmg;
 		SET char_health = char_health - netdmg;
 		UPDATE character_stats SET health=char_health WHERE character_id=target;
-		-- SELECT 'Damage Taken!' AS outcome, netdmg AS damage_taken, char_health AS remaining_health;
+		SELECT 'Damage Taken!' AS outcome, netdmg AS damage_taken, char_health AS remaining_health;
         
 		IF char_health < 1 THEN
-			-- SELECT name AS name, 'Died' AS status FROM characters WHERE character_id=target;
+			 SELECT name AS name, 'Died' AS status FROM characters WHERE character_id=target;
 			DELETE FROM characters WHERE character_id=target;
 		END IF; 
         
@@ -248,7 +251,8 @@ BEGIN
 END;;
 DELIMITER ;
 
--- CALL attack(12, 9)
+CALL attack(10, 7);
+-- SELECT damage FROM character_equipped WHERE item_id=7 GROUP BY item_id;
 
 -- equip
 DELIMITER ;;
