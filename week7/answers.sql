@@ -95,7 +95,7 @@ CREATE TABLE players (
 
 
 -- Check all characters items in inventory and equiped.
-CREATE OR REPLACE VIEW character_view AS 
+CREATE OR REPLACE VIEW character_items AS 
 	SELECT 
 		c.character_id AS character_id,
         c.name AS character_name,
