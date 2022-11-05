@@ -143,11 +143,7 @@ CREATE OR REPLACE VIEW character_items AS
 			ci.damage AS damage
         FROM character_inv ci
 	ORDER BY item_name;
-        
--- SELECT * FROM character_items WHERE character_id='7';
--- SELECT * FROM character_inv;
--- SELECT * FROM character_equipped;
-
+	
 
 -- ----------------- TEAM INVENTORY CHECK ------------------
 CREATE OR REPLACE VIEW team_items AS 
@@ -168,7 +164,6 @@ CREATE OR REPLACE VIEW team_items AS
 		ON i.item_id = inv.item_id
 GROUP BY t.team_id, inv.item_id;
 
--- SELECT * FROM team_items;
 
 -- ------------------------- ARMOR TOTAL FUNCTION ----------------------------
 DELIMITER ;;
@@ -209,9 +204,7 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
 END;;
 DELIMITER ;
     
-     -- SET @character_id=7;
-	--  SELECT armor_total(@character_id) AS armor_total, name AS name FROM characters WHERE character_id=@character_id;
-   
+    
 -- ------------------------------- Attack Procedure -------------------------
 DELIMITER ;;
 CREATE PROCEDURE attack(target INT UNSIGNED, chosen_weapon INT UNSIGNED)
@@ -240,7 +233,6 @@ BEGIN
 		SET char_health = char_health - netdmg;
 		UPDATE character_stats SET health=char_health WHERE character_id=target;
 		-- SELECT 'Damage Taken!' AS outcome, netdmg AS damage_taken, char_health AS remaining_health;
-        -- SELECT health FROM character_stats WHERE character_id=target;
         
 		IF char_health < 1 THEN
 			-- SELECT name AS name, 'Died' AS status FROM characters WHERE character_id=target;
@@ -254,9 +246,6 @@ END;;
 DELIMITER ;
 
 -- CALL attack(10, 68);
--- SELECT MAX(damage) FROM character_equipped WHERE character_id=1 AND damage > 0;
--- SELECT health FROM character_stats WHERE character_id=10;
--- SELECT damage FROM character_equipped WHERE item_id=7 GROUP BY item_id;
 
 -- ------------------- Equip -----------------------
 DELIMITER ;;
@@ -277,8 +266,6 @@ BEGIN
     
 END;;
 DELIMITER ;
-
--- CALL equip(3);
 
 
 -- ------------------ Unequip ----------------------------
@@ -301,7 +288,6 @@ BEGIN
 END;;
 DELIMITER ;
 
--- CALL unequip(3);
 
 -- -------------------------- set winners -----------------------
 DELIMITER ;;
@@ -328,5 +314,3 @@ BEGIN
 END;;
 DELIMITER ;
 
--- CALL set_winners(3);
--- SELECT * FROM winners;
