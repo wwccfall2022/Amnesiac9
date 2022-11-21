@@ -41,7 +41,7 @@ CREATE TABLE players (
  
    CREATE TABLE teams (
     team_id INT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    name varchar(30) NOT NULL
+    name VARCHAR(30) NOT NULL
  );
  
    CREATE TABLE team_members (
@@ -184,7 +184,6 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
 				INNER JOIN items i
 					ON i.item_id = eq.item_id
 			WHERE c.character_id=character_id
-			GROUP BY c.character_id;
 		
 		SELECT cs.armor 
 			INTO stat_armor 
@@ -192,8 +191,6 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
 				INNER JOIN character_stats cs 
 					ON c.character_id = cs.character_id 
 			WHERE c.character_id=character_id 
-			GROUP BY c.character_id;
-        
         
 		IF item_armor > 0 THEN
 			SET total_armor = (item_armor + stat_armor);
@@ -220,13 +217,9 @@ BEGIN
     SELECT armor_total(target) INTO char_armor;
     SELECT item_id INTO weapon FROM equipped WHERE equipped_id = chosen_weapon;
     SELECT damage INTO wep_damage FROM items WHERE item_id = weapon;
-    -- SELECT MAX(damage) INTO wep_damage FROM character_equipped WHERE character_id=attacker AND damage > 0; -- THIS GETS ITEM FROM PLAYER, i just need item from equiped 
-    -- SELECT item_id INTO weapon FROM character_equipped WHERE character_id=attacker AND damage >; -- doesn't work when there are multiple weapons equipped.
-    -- SELECT damage INTO wep_damage FROM character_equipped WHERE item_id=weapon GROUP BY item_id;
 
      IF wep_damage <= char_armor THEN
 		SELECT 'Damage Blocked!' AS outcome;
-        -- SELECT 'Damage Blocked!' INTO outcome;
 	ELSE
 		SELECT health INTO char_health FROM character_stats WHERE character_id=target;
 		SELECT wep_damage - char_armor INTO netdmg;
@@ -235,7 +228,6 @@ BEGIN
 		-- SELECT 'Damage Taken!' AS outcome, netdmg AS damage_taken, char_health AS remaining_health;
         
 		IF char_health < 1 THEN
-			-- SELECT name AS name, 'Died' AS status FROM characters WHERE character_id=target;
 			DELETE FROM characters WHERE character_id=target;
 		END IF; 
         
@@ -244,8 +236,6 @@ BEGIN
     
 END;;
 DELIMITER ;
-
--- CALL attack(10, 68);
 
 -- ------------------- Equip -----------------------
 DELIMITER ;;
@@ -260,7 +250,6 @@ BEGIN
     
     IF item > 0 THEN
 		INSERT INTO equipped (character_id, item_id) VALUES (hero, item);
-       -- SELECT 'equipping...' AS task, name AS item FROM items WHERE item_id=item;
         DELETE FROM inventory WHERE inventory_id=equip_id;
     END IF;
     
@@ -293,7 +282,6 @@ DELIMITER ;
 DELIMITER ;;
 CREATE PROCEDURE set_winners(team INT UNSIGNED)
 BEGIN
-	-- get character_id from team_members matching team_id and name from characters matching character_id and insert into winners
 
 	DECLARE winners TINYINT UNSIGNED;
     
