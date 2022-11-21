@@ -192,12 +192,8 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
 					ON c.character_id = cs.character_id 
 			WHERE c.character_id=character_id 
         
-		IF item_armor > 0 THEN
-			SET total_armor = (item_armor + stat_armor);
-			RETURN total_armor;
-		ELSE 
-			RETURN stat_armor;
-		END IF;
+		RETURN item_armor + stat_armor;
+
 END;;
 DELIMITER ;
     
