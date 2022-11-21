@@ -183,14 +183,14 @@ CREATE FUNCTION armor_total(character_id INT UNSIGNED)
 					ON c.character_id = eq.character_id
 				INNER JOIN items i
 					ON i.item_id = eq.item_id
-			WHERE c.character_id=character_id
+			WHERE c.character_id=character_id;
 		
 		SELECT cs.armor 
 			INTO stat_armor 
 				FROM characters c 
 				INNER JOIN character_stats cs 
 					ON c.character_id = cs.character_id 
-			WHERE c.character_id=character_id 
+			WHERE c.character_id=character_id;
         
 		RETURN item_armor + stat_armor;
 
