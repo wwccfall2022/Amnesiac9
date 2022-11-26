@@ -61,7 +61,7 @@ CREATE TABLE users (
 		ON DELETE CASCADE
  );
  
--- ------------------ Notification Posts ------------------ Currently shows any 1notifcations. TODO: Fix
+-- ------------------ Notification Posts ------------------ 
 
 CREATE OR REPLACE VIEW notification_posts AS 
 	SELECT 
@@ -78,7 +78,7 @@ CREATE OR REPLACE VIEW notification_posts AS
         
         
         
--- ------------------ Notify All ------------------ WORKING
+-- ------------------ Notify All Procedure ------------------ 
 
 DELIMITER ;;
 CREATE PROCEDURE notify_all(this_post_id INT UNSIGNED)
@@ -103,7 +103,7 @@ DELIMITER ;
 
 
 
--- ------------------ New User Added Trigger ------------------ WORKING
+-- ------------------ New User Added Trigger ------------------
 
 DELIMITER ;;
 CREATE TRIGGER user_added
@@ -132,7 +132,7 @@ DELIMITER ;
  
  
  
--- ------------------ Add Post Procedure ------------------ WORKING
+-- ------------------ Add Post Procedure ------------------
 
 DELIMITER ;;
 CREATE PROCEDURE add_post(this_user_id INT UNSIGNED, this_content VARCHAR(250))
