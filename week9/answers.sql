@@ -175,3 +175,17 @@ BEGIN
 
 END;;
 DELIMITER ;
+
+
+
+-- ------------------ EVENT LOG OUT ------------------  
+-- Every 10 seconds, remove all sessions that haven't been updated in the last 2 hours.
+
+DELIMITER ;;
+CREATE EVENT two_hour_loggout
+	ON SCHEDULE EVERY 2 HOUR
+DO
+BEGIN
+		DELETE FROM sessions WHERE updated_on = SUBTIME(NOW(), '2:00');
+END;;
+DELIMITER ;
