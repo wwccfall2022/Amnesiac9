@@ -68,14 +68,14 @@ CREATE OR REPLACE VIEW notification_posts AS
 			u.user_id AS user_id,
 			u.first_name AS first_name,
 			u.last_name AS last_name,
-            n.post_id AS post_id,
+            p.post_id AS post_id,
 			p.content AS content
-        FROM notifications n
-		LEFT OUTER JOIN users u
+	FROM users u
+		INNER JOIN notifications n
 			ON u.user_id = n.user_id
-		LEFT OUTER JOIN posts p
-			ON u.user_id = p.user_id 
-        ORDER BY u.user_id ASC;
+		INNER JOIN posts p
+			ON n.post_id = p.post_id
+	ORDER BY user_id ASC;
         
         
         
