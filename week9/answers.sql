@@ -186,6 +186,6 @@ CREATE EVENT two_hour_loggout
 	ON SCHEDULE EVERY 10 SECOND
 DO
 BEGIN
-		DELETE FROM sessions WHERE updated_on = SUBTIME(NOW(), '2:00');
+		DELETE FROM sessions WHERE updated_on <= DATE_SUB(NOW(), INTERVAL 2 HOUR);
 END;;
 DELIMITER ;
