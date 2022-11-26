@@ -94,8 +94,7 @@ BEGIN
     SET cur_user = 1;
 	
     -- Loop through all users and add notification for them
-    -- Should this add a notification for the new user? If no, delete the +1
-    WHILE cur_user < user_count + 1 DO
+    WHILE cur_user < user_count DO
 		INSERT INTO notifications (user_id, post_id) VALUES (cur_user, this_post_id);
         SET cur_user = cur_user + 1;
 	END WHILE;
