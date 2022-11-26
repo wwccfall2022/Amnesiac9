@@ -74,7 +74,7 @@ CREATE OR REPLACE VIEW notification_posts AS
 		LEFT OUTER JOIN users u
 			ON u.user_id = n.user_id
 		LEFT OUTER JOIN posts p
-			ON p.post_id = n.post_id
+			ON u.user_id = p.user_id 
         ORDER BY u.user_id ASC;
         
         
