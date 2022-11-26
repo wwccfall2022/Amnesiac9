@@ -61,7 +61,8 @@ CREATE TABLE users (
 		ON DELETE CASCADE
  );
  
- -- ------------------ Notification Posts ------------------
+-- ------------------ Notification Posts ------------------
+
 CREATE OR REPLACE VIEW notification_posts AS 
 	SELECT 
 			n.user_id AS user_id,
@@ -74,39 +75,37 @@ CREATE OR REPLACE VIEW notification_posts AS
 			ON u.user_id = n.user_id
         INNER JOIN posts p
 			ON p.user_id = n.user_id
-        GROUP BY u.user_id, p.post_id
+		-- WHERE n.user_id = current_user()
         ORDER BY u.user_id ASC;
         
-SELECT * FROM notification_posts;
-
-
--- ------------------ Notify All ------------------
+        
+        
+-- ------------------ Notify All ------------------ WORKING
 
 DELIMITER ;;
 CREATE PROCEDURE notify_all(this_post_id INT UNSIGNED)
 
 BEGIN
 
--- Get count of all users
+	-- Get count of all users
     DECLARE user_count INT;
     DECLARE cur_user INT;
-	SELECT COUNT(user_id) FROM users INTO user_count;
-	SELECT user_id FROM users ORDER BY user_id DESC LIMIT 1 INTO cur_user;
     
-    -- SET @current_post = (SELECT post_id FROM posts ORDER BY post_id DESC LIMIT 1);
+	SELECT COUNT(user_id) FROM users INTO user_count;
+	SET cur_user = 1;
 	
     -- Loop through all users and add notification for them
-    WHILE current_user < user_count + 1 DO
-		INSERT INTO notifications
-			(user_id, post_id)
-		VALUES
-			(cur_user, this_post_id);
-		
+    -- Should this add a notification for the new user? If no, delete the +1
+    WHILE cur_user < user_count + 1 DO
+		INSERT INTO notifications (user_id, post_id) VALUES (cur_user, this_post_id);
+	
         SET cur_user = cur_user + 1;
+        
 	END WHILE;
      
 END;;
 DELIMITER ;
+
 
 
 -- ------------------ New User Added Trigger ------------------
@@ -122,9 +121,6 @@ BEGIN
     DECLARE this_post_id INT;
     DECLARE this_user_id INT;
 	
-    
-    -- SELECT post_id + 1 FROM posts ORDER BY post_id DESC LIMIT 1 INTO this_post_id;
-    
     SELECT user_id FROM users ORDER BY user_id DESC LIMIT 1 INTO this_user_id;
     SELECT first_name FROM users WHERE user_id = this_post_id INTO first_name_new;
     SELECT last_name FROM users WHERE user_id = this_post_id INTO last_name_new;
@@ -133,12 +129,10 @@ BEGIN
     INSERT INTO posts
 		(user_id, content)
 	VALUES
-		-- (this_post_id, CONCAT(first_name_new, ' ', last_name_new, ' ', 'just joined!'));
-        (this_user_id, 'just joined!');
+		(this_post_id, CONCAT(first_name_new, ' ', last_name_new, ' ', 'just joined!'));
+	--  (this_user_id, 'just joined!');
         
 	SELECT post_id FROM posts ORDER BY post_id DESC LIMIT 1 INTO this_post_id;
-    
-    SET this_post_id = this_post_id + 1;
         
 	CALL notify_all(this_post_id);
         
@@ -147,45 +141,46 @@ DELIMITER ;
  
  
  
-
--- ------------------ Add Post Procedure ------------------ TODO: Fix
+-- ------------------ Add Post Procedure ------------------ WORKING
 
 DELIMITER ;;
-CREATE PROCEDURE add_post(user_id INT UNSIGNED, content VARCHAR(250))
+CREATE PROCEDURE add_post(this_user_id INT UNSIGNED, this_content VARCHAR(250))
 BEGIN
-
-    DECLARE friends_count INT;
     DECLARE this_post_id INT;
+    DECLARE cur_friend INT;
+    DECLARE row_not_found TINYINT DEFAULT FALSE;
+    
+    --  Friends Cursor
+    DECLARE friends_cursor CURSOR FOR 
+		SELECT f.friend_id
+			FROM friends f
+            WHERE f.user_id = this_user_id
+			ORDER BY f.friend_id ASC;
+            
+	-- Friends Cursor Row Not Found Handler
+    DECLARE CONTINUE HANDLER FOR NOT FOUND
+		SET row_not_found = TRUE;
     
     -- Make Post
-    INSERT INTO posts VALUES (user_id, content);
-    
-	-- Get count how many friends the user has
-	SELECT COUNT(user_id) FROM friends WHERE user_id = user_id INTO friends_count;
-    -- Get current post ID
-    SELECT LAST_INSERT_ID() FROM posts INTO this_post_id;
+    INSERT INTO posts (user_id, content) VALUES (this_user_id, this_content);
 
-    
+    -- Get current post ID
+    SELECT LAST_INSERT_ID() FROM posts LIMIT 1 INTO this_post_id;
+            
     -- Make Notifications
-    SET @current_user = 1;
-    SET @current_post = this_post_id;
-	
-	WHILE @current_user < friends_count + 1 DO
-		PREPARE notif_friends FROM 
-			'INSERT INTO notifications 
-				(user_id, post_id)
-			VALUES
-					(?, ?)';
-		IF friends_count > 0 THEN
-			EXECUTE notif_friends USING @current_user, @current_post;
+    OPEN friends_cursor;
+    friends_loop : LOOP
+    
+		FETCH friends_cursor INTO cur_friend;
+        IF row_not_found THEN
+			LEAVE friends_loop;
 		END IF;
-		SET @current_user = @current_user + 1;
-	END WHILE;
+        
+        -- Insert notification row
+        INSERT INTO notifications (user_id, post_id) VALUES (cur_friend, this_post_id);
+        
+	END LOOP friends_loop;
+    CLOSE friends_cursor;
 
 END;;
 DELIMITER ;
-
-INSERT INTO users
-    (user_id, first_name, last_name, email)
-VALUES
-    (7, 'John', 'Moreau', 'name@someemail.com');
