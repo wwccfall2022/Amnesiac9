@@ -61,21 +61,20 @@ CREATE TABLE users (
 		ON DELETE CASCADE
  );
  
--- ------------------ Notification Posts ------------------
+-- ------------------ Notification Posts ------------------ Currently shows any 1notifcations. TODO: Fix
 
 CREATE OR REPLACE VIEW notification_posts AS 
 	SELECT 
-			n.user_id AS user_id,
+			u.user_id AS user_id,
 			u.first_name AS first_name,
 			u.last_name AS last_name,
-            p.post_id AS post_id,
+            n.post_id AS post_id,
 			p.content AS content
         FROM notifications n
-        INNER JOIN users u
+		LEFT OUTER JOIN users u
 			ON u.user_id = n.user_id
-        INNER JOIN posts p
-			ON p.user_id = n.user_id
-		-- WHERE n.user_id = current_user()
+		LEFT OUTER JOIN posts p
+			ON p.post_id = n.post_id
         ORDER BY u.user_id ASC;
         
         
@@ -92,15 +91,13 @@ BEGIN
     DECLARE cur_user INT;
     
 	SELECT COUNT(user_id) FROM users INTO user_count;
-	SET cur_user = 1;
+    SET cur_user = 1;
 	
     -- Loop through all users and add notification for them
     -- Should this add a notification for the new user? If no, delete the +1
     WHILE cur_user < user_count + 1 DO
 		INSERT INTO notifications (user_id, post_id) VALUES (cur_user, this_post_id);
-	
         SET cur_user = cur_user + 1;
-        
 	END WHILE;
      
 END;;
@@ -108,8 +105,7 @@ DELIMITER ;
 
 
 
--- ------------------ New User Added Trigger ------------------
--- When a new user is added, create a notification for everyone that states "{first_name} {last_name} just joined!" (for example: "Jeromy Streets just joined!").
+-- ------------------ New User Added Trigger ------------------ WORKING
 
 DELIMITER ;;
 CREATE TRIGGER user_added
@@ -119,20 +115,17 @@ BEGIN
 	DECLARE first_name_new VARCHAR(30);
     DECLARE last_name_new VARCHAR(30);
     DECLARE this_post_id INT;
-    DECLARE this_user_id INT;
 	
-    SELECT user_id FROM users ORDER BY user_id DESC LIMIT 1 INTO this_user_id;
-    SELECT first_name FROM users WHERE user_id = this_post_id INTO first_name_new;
-    SELECT last_name FROM users WHERE user_id = this_post_id INTO last_name_new;
+    SELECT first_name FROM users WHERE user_id = NEW.user_id INTO first_name_new;
+    SELECT last_name FROM users WHERE user_id = NEW.user_id INTO last_name_new;
 
     
     INSERT INTO posts
 		(user_id, content)
 	VALUES
-		(this_post_id, CONCAT(first_name_new, ' ', last_name_new, ' ', 'just joined!'));
-	--  (this_user_id, 'just joined!');
+		(NEW.user_id, CONCAT(first_name_new, ' ', last_name_new, ' ', 'just joined!'));
         
-	SELECT post_id FROM posts ORDER BY post_id DESC LIMIT 1 INTO this_post_id;
+	SELECT LAST_INSERT_ID() FROM posts LIMIT 1 INTO this_post_id;
         
 	CALL notify_all(this_post_id);
         
