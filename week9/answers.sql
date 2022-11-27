@@ -61,7 +61,9 @@ CREATE TABLE users (
 		ON DELETE CASCADE
  );
  
--- ------------------ Notification Posts ------------------ 
+ 
+ 
+-- ------------------ Notification Posts View ------------------ 
 
 CREATE OR REPLACE VIEW notification_posts AS 
 	SELECT 
@@ -103,34 +105,6 @@ DELIMITER ;
 
 
 
--- ------------------ New User Added Trigger ------------------
-
-DELIMITER ;;
-CREATE TRIGGER user_added
-	AFTER INSERT ON users
-    FOR EACH ROW
-BEGIN
-	DECLARE first_name_new VARCHAR(30);
-    DECLARE last_name_new VARCHAR(30);
-    DECLARE this_post_id INT;
-	
-    SELECT first_name FROM users WHERE user_id = NEW.user_id INTO first_name_new;
-    SELECT last_name FROM users WHERE user_id = NEW.user_id INTO last_name_new;
-
-    
-    INSERT INTO posts
-		(user_id, content)
-	VALUES
-		(NEW.user_id, CONCAT(first_name_new, ' ', last_name_new, ' ', 'just joined!'));
-        
-	SELECT LAST_INSERT_ID() FROM posts LIMIT 1 INTO this_post_id;
-        
-	CALL notify_all(this_post_id);
-        
-END;;
-DELIMITER ;
- 
- 
  
 -- ------------------ Add Post Procedure ------------------
 
@@ -173,6 +147,36 @@ BEGIN
 	END LOOP friends_loop;
     CLOSE friends_cursor;
 
+END;;
+DELIMITER ;
+
+
+
+
+-- ------------------ New User Added Trigger ------------------
+
+DELIMITER ;;
+CREATE TRIGGER user_added
+	AFTER INSERT ON users
+    FOR EACH ROW
+BEGIN
+	DECLARE first_name_new VARCHAR(30);
+    DECLARE last_name_new VARCHAR(30);
+    DECLARE this_post_id INT;
+	
+    SELECT first_name FROM users WHERE user_id = NEW.user_id INTO first_name_new;
+    SELECT last_name FROM users WHERE user_id = NEW.user_id INTO last_name_new;
+
+    
+    INSERT INTO posts
+		(user_id, content)
+	VALUES
+		(NEW.user_id, CONCAT(first_name_new, ' ', last_name_new, ' ', 'just joined!'));
+        
+	SELECT LAST_INSERT_ID() FROM posts LIMIT 1 INTO this_post_id;
+        
+	CALL notify_all(this_post_id);
+        
 END;;
 DELIMITER ;
 
