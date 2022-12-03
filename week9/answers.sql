@@ -63,7 +63,7 @@ CREATE TABLE users (
  
  
  
--- ------------------ Notification Posts View ------------------ WORKING
+-- ------------------ Notification Posts View ------------------
 
                 
 CREATE OR REPLACE VIEW notification_posts AS 
@@ -82,31 +82,30 @@ CREATE OR REPLACE VIEW notification_posts AS
         
         
         
--- ------------------ Notify All Procedure ------------------ WORKING
+-- ------------------ Notify All Procedure ------------------
 
 DELIMITER ;;
 CREATE PROCEDURE notify_all(this_post_id INT UNSIGNED)
 BEGIN
 
 	-- Variables
+    DECLARE new_user_id INT;
     DECLARE cur_user INT;
-    DECLARE row_not_found TINYINT DEFAULT FALSE;
     
 	--  Users Cursor
 	DECLARE users_cursor CURSOR FOR 
 		SELECT u.user_id
 			FROM users u;
-            
-	-- Users Cursor Row Not Found Handler
-    DECLARE CONTINUE HANDLER FOR NOT FOUND
-		SET row_not_found = TRUE;
+	
+	-- Get the latest users ID, this will be our exit from the cursor loop
+	SELECT LAST_INSERT_ID() FROM users LIMIT 1 INTO new_user_id; 
     
     -- Make Notifications for all users
     OPEN users_cursor;
     users_loop : LOOP
     
 		FETCH users_cursor INTO cur_user;
-        IF row_not_found THEN
+        IF cur_user = new_user_id THEN
 			LEAVE users_loop;
 		END IF;
         
@@ -122,7 +121,7 @@ END;;
 
 
 
--- ------------------ Add Post Procedure ------------------ WORKING
+-- ------------------ Add Post Procedure ------------------ 
 
 
 CREATE PROCEDURE add_post(this_user_id INT UNSIGNED, this_content VARCHAR(250))
@@ -168,7 +167,7 @@ END;;
 
 
 
--- ------------------ New User Added Trigger ------------------ WORKING
+-- ------------------ New User Added Trigger ------------------
 
 
 CREATE TRIGGER user_added
