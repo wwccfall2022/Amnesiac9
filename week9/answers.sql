@@ -63,8 +63,9 @@ CREATE TABLE users (
  
  
  
--- ------------------ Notification Posts View ------------------ 
+-- ------------------ Notification Posts View ------------------ WORKING
 
+                
 CREATE OR REPLACE VIEW notification_posts AS 
 	SELECT 
 			n.user_id AS user_id,
@@ -77,38 +78,53 @@ CREATE OR REPLACE VIEW notification_posts AS
 				ON p.post_id = n.post_id
 			RIGHT OUTER JOIN users u
 				ON u.user_id = p.user_id;
+
         
         
         
--- ------------------ Notify All Procedure ------------------ 
+-- ------------------ Notify All Procedure ------------------ WORKING
 
 DELIMITER ;;
 CREATE PROCEDURE notify_all(this_post_id INT UNSIGNED)
-
 BEGIN
 
-	-- Get count of all users
-    DECLARE user_count INT;
+	-- Variables
     DECLARE cur_user INT;
+    DECLARE row_not_found TINYINT DEFAULT FALSE;
     
-	SELECT COUNT(user_id) FROM users INTO user_count;
-    SET cur_user = 1;
-	
-    -- Loop through all users and add notification for them
-    WHILE cur_user < user_count DO
-		INSERT INTO notifications (user_id, post_id) VALUES (cur_user, this_post_id);
-        SET cur_user = cur_user + 1;
-	END WHILE;
-     
+	--  Users Cursor
+	DECLARE users_cursor CURSOR FOR 
+		SELECT u.user_id
+			FROM users u;
+            
+	-- Users Cursor Row Not Found Handler
+    DECLARE CONTINUE HANDLER FOR NOT FOUND
+		SET row_not_found = TRUE;
+    
+    -- Make Notifications for all users
+    OPEN users_cursor;
+    users_loop : LOOP
+    
+		FETCH users_cursor INTO cur_user;
+        IF row_not_found THEN
+			LEAVE users_loop;
+		END IF;
+        
+        -- Insert notification row
+        INSERT INTO notifications (user_id, post_id) VALUES (cur_user, this_post_id);
+        
+	END LOOP users_loop;
+    CLOSE users_cursor;
+    
 END;;
-DELIMITER ;
 
 
 
- 
--- ------------------ Add Post Procedure ------------------
 
-DELIMITER ;;
+
+-- ------------------ Add Post Procedure ------------------ WORKING
+
+
 CREATE PROCEDURE add_post(this_user_id INT UNSIGNED, this_content VARCHAR(250))
 BEGIN
     DECLARE this_post_id INT;
@@ -148,44 +164,40 @@ BEGIN
     CLOSE friends_cursor;
 
 END;;
-DELIMITER ;
 
 
 
 
--- ------------------ New User Added Trigger ------------------
+-- ------------------ New User Added Trigger ------------------ WORKING
 
-DELIMITER ;;
+
 CREATE TRIGGER user_added
 	AFTER INSERT ON users
     FOR EACH ROW
 BEGIN
-	DECLARE first_name_new VARCHAR(30);
-    DECLARE last_name_new VARCHAR(30);
-    DECLARE this_post_id INT;
-	
-    SELECT first_name FROM users WHERE user_id = NEW.user_id INTO first_name_new;
-    SELECT last_name FROM users WHERE user_id = NEW.user_id INTO last_name_new;
 
+    DECLARE this_post_id INT;
     
+    -- Create Post about new user
     INSERT INTO posts
 		(user_id, content)
 	VALUES
-		(NEW.user_id, CONCAT(first_name_new, ' ', last_name_new, ' ', 'just joined!'));
+		(NEW.user_id, CONCAT(NEW.first_name, ' ', NEW.last_name, ' ', 'just joined!'));
         
 	SELECT LAST_INSERT_ID() FROM posts LIMIT 1 INTO this_post_id;
-        
+	
+    -- Notify all users of new post
 	CALL notify_all(this_post_id);
-        
+    
 END;;
-DELIMITER ;
 
-
-
+ 
+ 
+ 
 -- ------------------ EVENT LOG OUT ------------------  
 -- Every 10 seconds, remove all sessions that haven't been updated in the last 2 hours.
 
-DELIMITER ;;
+
 CREATE EVENT two_hour_loggout
 	ON SCHEDULE EVERY 10 SECOND
 DO
