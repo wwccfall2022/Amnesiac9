@@ -91,13 +91,17 @@ BEGIN
 	-- Variables
     DECLARE new_user_id INT;
     DECLARE cur_user INT;
+    DECLARE row_not_found TINYINT DEFAULT FALSE;
     
 	--  Users Cursor
 	DECLARE users_cursor CURSOR FOR 
 		SELECT u.user_id
 			FROM users u;
+            
+	DECLARE CONTINUE HANDLER FOR NOT FOUND
+		SET row_not_found = TRUE;
 	
-	-- Get the latest users ID, this will be our exit from the cursor loop
+	-- Get the latest users ID, this will be used to stop users getting a notification of their own joining.
 	SELECT LAST_INSERT_ID() FROM users LIMIT 1 INTO new_user_id; 
     
     -- Make Notifications for all users
@@ -105,12 +109,15 @@ BEGIN
     users_loop : LOOP
     
 		FETCH users_cursor INTO cur_user;
-        IF cur_user = new_user_id THEN
+        IF row_not_found THEN
 			LEAVE users_loop;
 		END IF;
         
         -- Insert notification row
-        INSERT INTO notifications (user_id, post_id) VALUES (cur_user, this_post_id);
+        IF cur_user != new_user_id THEN
+			INSERT INTO notifications (user_id, post_id) VALUES (cur_user, this_post_id);
+		END IF;
+        
         
 	END LOOP users_loop;
     CLOSE users_cursor;
