@@ -89,7 +89,6 @@ CREATE PROCEDURE notify_all(this_post_id INT UNSIGNED, new_user_id INT UNSIGNED)
 BEGIN
 
 	-- Variables
-   -- DECLARE new_user_id INT;
     DECLARE cur_user INT;
     DECLARE row_not_found TINYINT DEFAULT FALSE;
     
@@ -100,9 +99,7 @@ BEGIN
             
 	DECLARE CONTINUE HANDLER FOR NOT FOUND
 		SET row_not_found = TRUE;
-	
-	-- Get the latest users ID, this will be used to stop users getting a notification of their own joining.
-	-- SELECT user_id FROM users ORDER BY user_id DESC LIMIT 1 INTO new_user_id; 
+
     
     -- Make Notifications for all users
     OPEN users_cursor;
@@ -113,7 +110,7 @@ BEGIN
 			LEAVE users_loop;
 		END IF;
         
-        -- Insert notification row
+        -- Insert notification row, make sure the user_id isn't the ID for the newest user.
         IF cur_user != new_user_id THEN
 			INSERT INTO notifications (user_id, post_id) VALUES (cur_user, this_post_id);
 		END IF;
