@@ -85,24 +85,24 @@ CREATE OR REPLACE VIEW notification_posts AS
 -- ------------------ Notify All Procedure ------------------
 
 DELIMITER ;;
-CREATE PROCEDURE notify_all(this_post_id INT UNSIGNED)
+CREATE PROCEDURE notify_all(this_post_id INT UNSIGNED, new_user_id INT UNSIGNED)
 BEGIN
 
 	-- Variables
-    DECLARE new_user_id INT;
+   -- DECLARE new_user_id INT;
     DECLARE cur_user INT;
     DECLARE row_not_found TINYINT DEFAULT FALSE;
     
 	--  Users Cursor
 	DECLARE users_cursor CURSOR FOR 
-		SELECT u.user_id
-			FROM users u;
+		SELECT user_id
+			FROM users;
             
 	DECLARE CONTINUE HANDLER FOR NOT FOUND
 		SET row_not_found = TRUE;
 	
 	-- Get the latest users ID, this will be used to stop users getting a notification of their own joining.
-	SELECT LAST_INSERT_ID() FROM users LIMIT 1 INTO new_user_id; 
+	-- SELECT user_id FROM users ORDER BY user_id DESC LIMIT 1 INTO new_user_id; 
     
     -- Make Notifications for all users
     OPEN users_cursor;
@@ -183,6 +183,7 @@ CREATE TRIGGER user_added
 BEGIN
 
     DECLARE this_post_id INT;
+    DECLARE new_user_id INT;
     
     -- Create Post about new user
     INSERT INTO posts
@@ -191,9 +192,10 @@ BEGIN
 		(NEW.user_id, CONCAT(NEW.first_name, ' ', NEW.last_name, ' ', 'just joined!'));
         
 	SELECT LAST_INSERT_ID() FROM posts LIMIT 1 INTO this_post_id;
+    SELECT NEW.user_id INTO new_user_id;
 	
     -- Notify all users of new post
-	CALL notify_all(this_post_id);
+	CALL notify_all(this_post_id, new_user_id);
     
 END;;
 
