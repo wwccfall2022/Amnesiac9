@@ -68,16 +68,16 @@ CREATE TABLE users (
                 
 CREATE OR REPLACE VIEW notification_posts AS 
 	SELECT 
-			n.user_id AS user_id,
-			u.first_name AS first_name,
-			u.last_name AS last_name,
-            p.post_id AS post_id,
-		 	p.content AS content
-		FROM notifications n
-			INNER JOIN posts p
-				ON p.post_id = n.post_id
-			RIGHT OUTER JOIN users u
-				ON u.user_id = p.user_id;
+		n.user_id AS user_id,
+		u.first_name AS first_name,
+		u.last_name AS last_name,
+		p.post_id AS post_id,
+		p.content AS content
+	FROM users u
+		LEFT OUTER JOIN posts p 
+			ON u.user_id = p.user_id
+		LEFT OUTER JOIN notifications n
+			ON p.post_id = n.post_id;
 
         
         
