@@ -149,7 +149,7 @@ BEGIN
     INSERT INTO posts (user_id, content) VALUES (this_user_id, this_content);
 
     -- Get current post ID
-    SELECT LAST_INSERT_ID() FROM posts LIMIT 1 INTO this_post_id;
+    SELECT LAST_INSERT_ID() INTO this_post_id;
             
     -- Make Notifications
     OPEN friends_cursor;
@@ -188,7 +188,7 @@ BEGIN
 	VALUES
 		(NEW.user_id, CONCAT(NEW.first_name, ' ', NEW.last_name, ' ', 'just joined!'));
         
-	SELECT LAST_INSERT_ID() FROM posts LIMIT 1 INTO this_post_id;
+    SELECT LAST_INSERT_ID() INTO this_post_id;
     SELECT NEW.user_id INTO new_user_id;
 	
     -- Notify all users of new post
